@@ -100,13 +100,14 @@ class Process(object):
             self.pubsub = PubSub(self.modules)
         else:
             raise Exception('Your process has to listen to at least one feed.')
+        # Setup the intermediary redis connector that makes the queues multiprocessing-ready
         self.r_temp = redis.StrictRedis(
-            host=self.config.get('Redis_Default', 'host'),
-            port=self.config.get('Redis_Default', 'port'),
-            db=self.config.get('Redis_Default', 'db'))
+            host=self.modules.get('Redis_Default', 'host'),
+            port=self.modules.get('Redis_Default', 'port'),
+            db=self.modules.get('Redis_Default', 'db'))
 
     def populate_set_in(self):
-        # monoproc
+        '''Push all the messages addressed to the queue in a temporary redis set (mono process)'''
         src = self.modules.get(self.subscriber_name, 'subscribe')
         self.pubsub.setup_subscribe(src)
         for msg in self.pubsub.subscribe():
@@ -116,21 +117,21 @@ class Process(object):
                              int(self.r_temp.scard(in_set)))
 
     def pop_from_set(self):
-        # multiproc
+        '''Pop a messages from the temporary queue (multiprocess)'''
         in_set = self.subscriber_name + 'in'
         self.r_temp.hset('queues', self.subscriber_name,
                          int(self.r_temp.scard(in_set)))
         return self.r_temp.spop(in_set)
 
     def populate_set_out(self, msg, channel=None):
-        # multiproc
+        '''Push a messages to the temporary exit queue (multiprocess)'''
         msg = {'message': msg}
         if channel is not None:
             msg.update({'channel': channel})
         self.r_temp.sadd(self.subscriber_name + 'out', json.dumps(msg))
 
     def publish(self):
-        # monoproc
+        '''Push all the messages processed by the module to the next queue (mono process)'''
         if not self.modules.has_option(self.subscriber_name, 'publish'):
             return False
         dest = self.modules.get(self.subscriber_name, 'publish')
