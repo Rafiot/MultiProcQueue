@@ -80,6 +80,28 @@ class PubSub(object):
                 p.send('{} {}'.format(channel, m['message']))
 
 
+def pop_from_set(runtime, module_name):
+    '''Pop a messages from the temporary queue (multiprocess)'''
+    r_temp = redis.StrictRedis(host=runtime['Redis_Default']['host'],
+                               port=runtime['Redis_Default']['port'],
+                               db=runtime['Redis_Default']['db'])
+    in_set = module_name + 'in'
+    r_temp.hset('queues', module_name, int(r_temp.scard(in_set)))
+    return r_temp.spop(in_set)
+
+
+def populate_set_out(runtime, module_name, msg, channel=None):
+    '''Push a messages to the temporary exit queue (multiprocess)'''
+    r_temp = redis.StrictRedis(host=runtime['Redis_Default']['host'],
+                               port=runtime['Redis_Default']['port'],
+                               db=runtime['Redis_Default']['db'])
+    out_set = module_name + 'out'
+    msg = {'message': msg}
+    if channel is not None:
+        msg.update({'channel': channel})
+    r_temp.sadd(out_set, json.dumps(msg))
+
+
 class Process(object):
 
     def __init__(self, pipeline, module_name, runtime):
@@ -104,18 +126,6 @@ class Process(object):
         for msg in self.pubsub.subscribe():
             self.r_temp.sadd(self.in_set, msg)
             self.r_temp.hset('queues', self.module_name, int(self.r_temp.scard(self.in_set)))
-
-    def pop_from_set(self):
-        '''Pop a messages from the temporary queue (multiprocess)'''
-        self.r_temp.hset('queues', self.module_name, int(self.r_temp.scard(self.in_set)))
-        return self.r_temp.spop(self.in_set)
-
-    def populate_set_out(self, msg, channel=None):
-        '''Push a messages to the temporary exit queue (multiprocess)'''
-        msg = {'message': msg}
-        if channel is not None:
-            msg.update({'channel': channel})
-        self.r_temp.sadd(self.out_set, json.dumps(msg))
 
     def publish(self):
         '''Push all the messages processed by the module to the next queue (mono process)'''

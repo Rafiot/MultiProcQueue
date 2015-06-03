@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 # -*-coding:UTF-8 -*
 
+import argparse
+import signal
+import sys
+
 from pubsublogger import publisher
 from multiprocqueue import Process
-import argparse
+
+
+def signal_term_handler(signal, frame):
+    print 'got SIGTERM'
+    sys.exit(0)
 
 
 def run(pipeline, module, runtime):
@@ -14,6 +22,7 @@ def run(pipeline, module, runtime):
 if __name__ == '__main__':
     publisher.port = 6380
     publisher.channel = 'Queuing'
+    signal.signal(signal.SIGINT, signal_term_handler)
 
     parser = argparse.ArgumentParser(description='Output queue for a module.')
     parser.add_argument("-p", "--pipeline", type=str, required=True, help="Path to the pipeline configuration file.")
