@@ -1,11 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*-coding:UTF-8 -*
 
 
-import ConfigParser
-import os
+import json
 import subprocess
 import time
+import argparse
 
 
 def check_pid(pid):
@@ -17,20 +17,14 @@ def check_pid(pid):
             return False
     return True
 
-if __name__ == '__main__':
-    configfile = os.path.join(os.environ['AIL_BIN'], 'packages/modules.cfg')
-    if not os.path.exists(configfile):
-        raise Exception('Unable to find the configuration file. \
-                        Did you set environment variables? \
-                        Or activate the virtualenv.')
-    config = ConfigParser.ConfigParser()
-    config.read(configfile)
 
-    modules = config.sections()
+def run(pipeline, runtime):
+    config = json.load(open(pipeline, 'r'))
+
     pids = {}
-    for module in modules:
-        pin = subprocess.Popen(["python", './QueueIn.py', '-c', module])
-        pout = subprocess.Popen(["python", './QueueOut.py', '-c', module])
+    for module in config.keys():
+        pin = subprocess.Popen(['QueueIn.py', '-p', pipeline, '-m', module, '-r', runtime])
+        pout = subprocess.Popen(['QueueOut.py', '-p', pipeline, '-m', module, '-r', runtime])
         pids[module] = (pin, pout)
     is_running = True
     try:
@@ -57,9 +51,18 @@ if __name__ == '__main__':
                     is_running = True
                 pids[module] = (pin, pout)
     except KeyboardInterrupt:
-        for module, p in pids.iteritems():
+        for module, p in pids.items():
             pin, pout = p
             if pin is not None:
                 pin.kill()
             if pout is not None:
                 pout.kill()
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Launch all the multipocessing helpers desribed in the config file.')
+    parser.add_argument("-p", "--pipeline", type=str, required=True, help="Path to the pipeline configuration file.")
+    parser.add_argument("-r", "--runtime", type=str, required=True, help="Path to the runtime configuration file.")
+    args = parser.parse_args()
+
+    run(args.pipeline, args.runtime)
