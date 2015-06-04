@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
     runtime = json.load(open(args.runtime, 'r'))
 
-    module_name = 'Global'
+    module_name = 'SubSub'
 
     # LOGGING #
     publisher.info("Feed Script started to receive & publish.")

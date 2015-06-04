@@ -31,7 +31,7 @@ def run(pipeline, runtime):
         while is_running:
             time.sleep(5)
             is_running = False
-            for module, p in pids.iteritems():
+            for module, p in pids.items():
                 pin, pout = p
                 if pin is None:
                     # already dead
