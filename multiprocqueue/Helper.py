@@ -51,7 +51,7 @@ class PubSub(object):
                     yield msg['data']
         elif self.zmq_sub:
             while True:
-                msg = self.subscriber.recv()
+                msg = self.subscriber.recv_string()
                 yield msg.split(' ', 1)[1]
         else:
             raise Exception('No subscribe function defined')
@@ -77,7 +77,7 @@ class PubSub(object):
                 p.publish(channel, m['message'])
         for p, channel in self.publishers['ZMQ']:
             if channel_message is None or channel_message == channel:
-                p.send('{} {}'.format(channel, m['message']))
+                p.send_string('{} {}'.format(channel, m['message']))
 
 
 def pop_from_set(runtime, module_name):
@@ -96,7 +96,7 @@ def populate_set_out(runtime, module_name, msg, channel=None):
                                port=runtime['Redis_Default']['port'],
                                db=runtime['Redis_Default']['db'])
     out_set = module_name + 'out'
-    msg = {'message': msg}
+    msg = {'message': msg.decode('utf-8')}
     if channel is not None:
         msg.update({'channel': channel})
     r_temp.sadd(out_set, json.dumps(msg))
@@ -143,4 +143,4 @@ class Process(object):
             if message is None:
                 time.sleep(1)
                 continue
-            self.pubsub.publish(message)
+            self.pubsub.publish(message.decode('utf-8'))

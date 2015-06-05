@@ -20,7 +20,7 @@ def run(pipeline, module, runtime):
         print(module, 'has no publisher.')
 
 if __name__ == '__main__':
-    publisher.port = 6380
+    publisher.port = 6381
     publisher.channel = 'Queuing'
     signal.signal(signal.SIGINT, signal_term_handler)
 
@@ -29,5 +29,7 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--module", type=str, required=True, help="Module to use.")
     parser.add_argument("-r", "--runtime", type=str, required=True, help="Path to the runtime configuration file.")
     args = parser.parse_args()
+
+    publisher.info('QueueOut: Starting ' + args.module)
 
     run(args.pipeline, args.module, args.runtime)
