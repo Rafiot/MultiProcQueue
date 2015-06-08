@@ -2,6 +2,7 @@
 import time
 import argparse
 import json
+import os
 
 from pubsublogger import publisher
 from multiprocqueue import pop_from_set, populate_set_out
@@ -17,18 +18,18 @@ if __name__ == '__main__':
 
     runtime = json.load(open(args.runtime, 'r'))
 
-    module_name = 'SubSub'
+    module_name = os.path.splitext(os.path.basename(__file__))[0]
 
     # LOGGING #
-    publisher.info("Feed Script started to receive & publish.")
+    publisher.info(module_name + ": started to receive & publish.")
 
     while True:
 
         message = pop_from_set(runtime, module_name)
         if message is not None:
-            print(module_name, 'Got a message')
+            publisher.debug(module_name + ': Got a message')
             populate_set_out(runtime, module_name, message)
         else:
-            print(module_name, "Empty Queues: Waiting...")
+            publisher.debug(module_name + ": Empty Queues: Waiting...")
             time.sleep(1)
             continue

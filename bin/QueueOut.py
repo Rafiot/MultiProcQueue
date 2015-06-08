@@ -10,14 +10,14 @@ from multiprocqueue import Process
 
 
 def signal_term_handler(signal, frame):
-    print('got SIGTERM')
+    publisher.info('got SIGTERM')
     sys.exit(0)
 
 
 def run(pipeline, module, runtime):
     p = Process(pipeline, module, runtime)
     if not p.publish():
-        print(module, 'has no publisher.')
+        publisher.info(module, 'has no publisher.')
 
 if __name__ == '__main__':
     publisher.port = 6381

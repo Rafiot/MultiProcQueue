@@ -10,7 +10,7 @@ from multiprocqueue import Process
 
 
 def signal_term_handler(signal, frame):
-    print('got SIGTERM')
+    publisher.info('got SIGTERM')
     sys.exit(0)
 
 

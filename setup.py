@@ -12,7 +12,7 @@ setup(
     description='Multiprocessed queuing system.',
     long_description=open('README.md').read(),
     packages=['multiprocqueue'],
-    scripts=['bin/launch_queues.py', 'bin/QueueIn.py', 'bin/QueueOut.py'],
+    scripts=['bin/launch_queues.py', 'bin/launch_modules.py', 'bin/QueueIn.py', 'bin/QueueOut.py'],
     classifiers=[
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Development Status :: 3 - Alpha',
