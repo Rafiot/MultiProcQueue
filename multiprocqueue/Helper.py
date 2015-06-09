@@ -80,26 +80,39 @@ class PubSub(object):
                 p.send_string('{} {}'.format(channel, m['message']))
 
 
-def pop_from_set(runtime, module_name):
-    '''Pop a messages from the temporary queue (multiprocess)'''
-    r_temp = redis.StrictRedis(host=runtime['Redis_Default']['host'],
-                               port=runtime['Redis_Default']['port'],
-                               db=runtime['Redis_Default']['db'])
-    in_set = module_name + 'in'
-    r_temp.hset('queues', module_name, int(r_temp.scard(in_set)))
-    return r_temp.spop(in_set)
+class Pipeline(object):
 
+    def __init__(self, redis_config, module_name):
+        self.host = redis_config['host']
+        self.port = redis_config['port']
+        self.db = redis_config['db']
+        self.module_name = module_name
 
-def populate_set_out(runtime, module_name, msg, channel=None):
-    '''Push a messages to the temporary exit queue (multiprocess)'''
-    r_temp = redis.StrictRedis(host=runtime['Redis_Default']['host'],
-                               port=runtime['Redis_Default']['port'],
-                               db=runtime['Redis_Default']['db'])
-    out_set = module_name + 'out'
-    msg = {'message': msg.decode('utf-8')}
-    if channel is not None:
-        msg.update({'channel': channel})
-    r_temp.sadd(out_set, json.dumps(msg))
+        self.in_set = self.module_name + 'in'
+        self.out_set = self.module_name + 'out'
+
+        self.r_temp = redis.StrictRedis(host=self.host, port=self.port, db=self.db, socket_timeout=50000)
+
+    def sleep(self, interval):
+        """Requests the pipeline to sleep for the given interval"""
+        time.sleep(interval)
+
+    def send(self, msg, channel=None):
+        '''Push a messages to the temporary exit queue (multiprocess)'''
+        msg = {'message': msg.decode('utf-8')}
+        if channel is not None:
+            msg.update({'channel': channel})
+        self.r_temp.sadd(self.out_set, json.dumps(msg))
+
+    def receive(self):
+        '''Pop a messages from the temporary queue (multiprocess)'''
+        # Update the size of the current waiting queue (for information purposes)
+        self.r_temp.hset('queues', self.module_name, self.count_queued_messages())
+        return self.r_temp.spop(self.in_set)
+
+    def count_queued_messages(self):
+        '''Return the size of the current queue'''
+        return self.r_temp.scard(self.in_set)
 
 
 class Process(object):

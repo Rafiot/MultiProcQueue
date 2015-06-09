@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-import time
 import argparse
 import json
 import os
 
 from pubsublogger import publisher
-from multiprocqueue import pop_from_set, populate_set_out
+from multiprocqueue import Pipeline
 
 
 if __name__ == '__main__':
@@ -16,20 +15,25 @@ if __name__ == '__main__':
     parser.add_argument("-r", "--runtime", type=str, required=True, help="Path to the runtime configuration file.")
     args = parser.parse_args()
 
-    runtime = json.load(open(args.runtime, 'r'))
-
     module_name = os.path.splitext(os.path.basename(__file__))[0]
+
+    runtime = json.load(open(args.runtime, 'r'))
+    pipeline = Pipeline(runtime['Redis_Default'], module_name)
 
     # LOGGING #
     publisher.info(module_name + ": started to receive & publish.")
 
+    nb = 0
+
     while True:
 
-        message = pop_from_set(runtime, module_name)
+        message = pipeline.receive()
         if message is not None:
             publisher.debug(module_name + ': Got a message')
-            populate_set_out(runtime, module_name, message)
+            pipeline.send(message)
+            nb += 1
+            if nb % 100 == 0:
+                publisher.info('{}: {} messages processed, {} to go.'.format(module_name, nb, pipeline.count_queued_messages()))
         else:
             publisher.debug(module_name + ": Empty Queues: Waiting...")
-            time.sleep(1)
-            continue
+            pipeline.sleep(1)
