@@ -5,7 +5,7 @@ import json
 import argparse
 import subprocess
 import time
-import os
+import shlex
 
 
 def check_pid(pid):
@@ -18,8 +18,8 @@ def check_pid(pid):
     return True
 
 
-def run(pipeline, runtime, modules_path):
-    config = json.load(open(pipeline, 'r'))
+def run(startup, runtime):
+    config = json.load(open(startup, 'r'))
     pids = {}
     for module in config.keys():
         nb_processes = config[module].get('processes')
@@ -27,7 +27,9 @@ def run(pipeline, runtime, modules_path):
             nb_processes = 1
         pids[module] = []
         for i in range(nb_processes):
-            pid = subprocess.Popen([os.path.join(modules_path, module + '.py'), '-r', runtime])
+            cmd = "python -m {} -r {} -i {}_{}".format(config[module]['module'], runtime, module, i)
+            args = shlex.split(cmd)
+            pid = subprocess.Popen(args)
             pids[module].append(pid)
     is_running = True
     try:
@@ -51,8 +53,7 @@ def run(pipeline, runtime, modules_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Manage the amount of proceses started for each module.')
-    parser.add_argument("-p", "--pipeline", type=str, required=True, help="Path to the pipeline configuration file.")
+    parser.add_argument("-s", "--startup", type=str, required=True, help="Path to the startup configuration file.")
     parser.add_argument("-r", "--runtime", type=str, required=True, help="Path to the runtime configuration file.")
-    parser.add_argument("-m", "--modules", type=str, required=True, help="Path to the directory where all the modules are stored.")
     args = parser.parse_args()
-    run(args.pipeline, args.runtime, args.modules)
+    run(args.startup, args.runtime)
