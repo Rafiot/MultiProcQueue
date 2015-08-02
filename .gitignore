@@ -4,3 +4,5 @@ dist/
 *.swp
 *.pyc
 example/logs/*
+example_disque/logs/*
+example_disque/nodes.conf
