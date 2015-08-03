@@ -6,9 +6,13 @@ Use Case
 2. Processing
 3. Datafeed out
 
-Module concept
-==============
+Redis Pubsub
+============
 
-![Module](doc/Module.jpg)
+![Module](doc/redis/Module.jpg)
 
 
+Disque
+======
+
+![Module](doc/disque/Module.jpg)
