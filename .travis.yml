@@ -25,7 +25,7 @@ before_install:
 
 install:
     - python setup.py install
-    - pip install pydisque
+    - pip install git+https://github.com/ybrs/pydisque.git
     - pushd example
     - ./run_redis.sh
     - popd
