@@ -59,12 +59,16 @@ script:
     - popd
 
 after_failure:
-    - cat example/Queuing*.log
-    - cat example/Script*.log
+    - cat example/logs/Queuing*.log
+    - cat example/logs/Script*.log
+    - cat example_disque/logs/Queuing*.log
+    - cat example_disque/logs/Script*.log
 
 after_success:
-    - cat example/Queuing*.log
-    - cat example/Script*.log
+    - cat example/logs/Queuing*.log
+    - cat example/logs/Script*.log
+    - cat example_disque/logs/Queuing*.log
+    - cat example_disque/logs/Script*.log
 
 notifications:
     email:

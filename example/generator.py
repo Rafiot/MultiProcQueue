@@ -21,7 +21,7 @@ while True:
     messagedata = time.time()
     socket.send_string("{} {}".format(topic, messagedata))
     nb += 1
-    time.sleep(.001)
+    #time.sleep(.001)
     if nb % 1000 == 0:
         print(nb)
 
