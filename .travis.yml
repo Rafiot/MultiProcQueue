@@ -46,7 +46,7 @@ script:
     - launch_modules.py -r etc/runtime.conf -s etc/startup.conf &
     - M_PID=$!
     - ./generator.py
-    - sleep 30
+    - sleep 60
     - kill -9 $Q_PID
     - kill -9 $M_PID
     - killall log_subscriber
@@ -57,7 +57,7 @@ script:
     - ./launch_modules.py -s etc/startup.conf -r etc/runtime.conf -p etc/pipeline.conf &
     - M_PID=$!
     - ./generator.py
-    - sleep 30
+    - sleep 60
     - kill -9 $M_PID
     - killall log_subscriber
     - popd
@@ -65,13 +65,11 @@ script:
 after_failure:
     - cat example/logs/Queuing*.log
     - cat example/logs/Script*.log
-    - cat example_disque/logs/Queuing*.log
     - cat example_disque/logs/Script*.log
 
 after_success:
     - cat example/logs/Queuing*.log
     - cat example/logs/Script*.log
-    - cat example_disque/logs/Queuing*.log
     - cat example_disque/logs/Script*.log
 
 notifications:
