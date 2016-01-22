@@ -1,0 +1,72 @@
+language: python
+
+python:
+    - "2.7"
+    - "3.3"
+    - "3.4"
+    - "3.5"
+    - "nightly"
+
+cache: pip
+
+env:
+    - PATH=$TRAVIS_BUILD_DIR/disque/src:$TRAVIS_BUILD_DIR/redis/src:$PATH
+
+before_install:
+    - git config --global user.name "TravisCI"
+    - git clone https://github.com/antirez/disque.git
+    - pushd disque
+    - make
+    - popd
+    - git clone https://github.com/antirez/redis.git
+    - pushd redis
+    - make
+    - popd
+
+install:
+    - python setup.py install
+    - pip install pydisque
+    - pushd example
+    - ./run_redis.sh
+    - popd
+    - pushd example_disque
+    - ./run_disque.sh
+    - popd
+
+script:
+    # Redis
+    - pushd example
+    - ./run_logging.sh
+    - launch_queues.py -p etc/pipeline.conf -r etc/runtime.conf &
+    - Q_PID=$!
+    - launch_modules.py -r etc/runtime.conf -s etc/startup.conf &
+    - M_PID=$!
+    - ./generator.py
+    - sleep 30
+    - kill -9 $Q_PID
+    - kill -9 $M_PID
+    - killall log_subscriber
+    - popd
+    # Disque
+    - pushd example_disque
+    - ./run_logging.sh
+    - ./launch_modules.py -s etc/startup.conf -r etc/runtime.conf -p etc/pipeline.conf &
+    - M_PID=$!
+    - ./generator.py
+    - sleep 30
+    - kill -9 $M_PID
+    - killall log_subscriber
+    - popd
+
+after_failure:
+    - cat example/Queuing*.log
+    - cat example/Script*.log
+
+after_success:
+    - cat example/Queuing*.log
+    - cat example/Script*.log
+
+notifications:
+    email:
+        on_success: change
+        on_failure: change

@@ -24,3 +24,6 @@ while True:
     time.sleep(.001)
     if nb % 1000 == 0:
         print(nb)
+    elif nb % 100000 == 0:
+        print('Done.')
+        break

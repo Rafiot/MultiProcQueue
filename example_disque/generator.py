@@ -14,6 +14,9 @@ while True:
     messagedata = time.time()
     client.add_job("Global", messagedata)
     nb += 1
-#    time.sleep(.001)
+    time.sleep(.001)
     if nb % 1000 == 0:
         print(nb)
+    elif nb % 100000 == 0:
+        print('Done.')
+        break
