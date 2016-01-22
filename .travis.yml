@@ -9,6 +9,10 @@ python:
 
 cache: pip
 
+dist: trusty
+
+group: edge
+
 env:
     - PATH=$TRAVIS_BUILD_DIR/disque/src:$TRAVIS_BUILD_DIR/redis/src:$PATH
 
