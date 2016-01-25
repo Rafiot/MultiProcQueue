@@ -25,6 +25,6 @@ while True:
     if nb % 1000 == 0:
         print(nb)
 
-    if nb % 100000 == 0:
+    if nb % 10000 == 0:
         print('Done.')
         break
